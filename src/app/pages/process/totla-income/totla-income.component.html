@@ -1,0 +1,133 @@
+<div class="container-fluid">
+
+    <!-- start page title -->
+    <!--     <app-page-title title="Invoice List" [breadcrumbItems]="breadCrumbItems"></app-page-title>
+ -->
+    <!-- end page title -->
+    <div class="row">
+        <div class="col-sm-12 ">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0 font-size-18">Total Ingresos</h4>
+
+                <div class="page-title-right">
+                    <button class="btn btn-success" (click)="exportarExcel()">
+                        <i class="mdi mdi-file-excel"></i>
+                    </button>
+
+                </div>
+            </div>
+
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div role="status" class="spinner-border text-primary m-1" *ngIf="estaCargandoTotalIngreso"><span
+                        class="sr-only">Loading...</span></div>
+                <div class="table-responsive" *ngIf="totalIngreso">
+                    <table class="table table-bordered dt-responsive nowrap  no-footer dtr-inline table-heade_sticky">
+                        <thead>
+                            <tr>
+                                <th class="text-center fondo-gris" rowspan="3" style="min-width: 120px;">Fecha</th>
+                                <th colspan="4" class="text-center fondo-gris"
+                                    *ngFor="let loteItem of totalIngreso.lotes">
+                                    {{loteItem}}
+                                </th>
+                                <th class="text-center fondo-gris" colspan="4">
+                                    TOTAL (EN MILES DE UNIDADES)
+                                </th>
+                                <th class="text-center fondo-gris" colspan="4">
+                                    TOTAL (EN MILES DE UNIDADES)
+                                </th>
+                                <th class="text-center fondo-gris text-white" rowspan="3">
+                                    MACHOS
+                                </th>
+                                <th class="text-center fondo-gris text-white" rowspan="3">
+                                    MACHOS Sobrante/Faltante
+                                </th>
+                                <th class="text-center text-white" [ngStyle]="{'backgroundColor':clienteItem.color}"
+                                    rowspan="3" *ngFor="let clienteItem of totalIngreso.clientes ">
+                                    {{clienteItem.nombreCliente}}
+                                </th>
+                                <th class="text-center fondo-gris text-white" rowspan="3">
+                                    HEMBRA Sobrante/Faltante
+                                </th>
+                            </tr>
+                            <tr>
+                                <ng-template ngFor let-item [ngForOf]="totalIngreso.lotes">
+                                    <th class="text-center fondo-gris" colspan="2">Hembra</th>
+                                    <th class="text-center fondo-gris" colspan="2">Macho</th>
+                                </ng-template>
+                                <th class="text-center fondo-gris 3" colspan="4">HEMBRA</th>
+                                <th class="text-center fondo-gris 3" colspan="4">MACHO</th>
+
+                            </tr>
+                            <tr>
+                                <ng-template ngFor let-item [ngForOf]="totalIngreso.lotes">
+                                    <th class="text-center fondo-gris"># H.I</th>
+                                    <th class="text-center fondo-gris"># BBs</th>
+                                    <th class="text-center fondo-gris"># H.I</th>
+                                    <th class="text-center fondo-gris"># BBs</th>
+                                </ng-template>
+                                <th class="text-center fondo-gris 1"># H.I</th>
+                                <th class="text-center fondo-gris 1"># H.I REAL</th>
+                                <th class="text-center fondo-gris 1"># BBs</th>
+                                <th class="text-center fondo-gris 1"># BBs REAL</th>
+                                <th class="text-center fondo-gris 1"># H.I</th>
+                                <th class="text-center fondo-gris 1"># H.I REAL</th>
+                                <th class="text-center fondo-gris 1"># BBs</th>
+                                <th class="text-center fondo-gris 1"># BBs REAL</th>
+
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let dataReporteItem of totalIngreso.reporte ">
+                                <td>{{dataReporteItem.fecha}}</td>
+                                <ng-template ngFor let-loteItem [ngForOf]="dataReporteItem.lotes ">
+                                    <td>{{loteItem.lineaHembra.hi | number:'1.1-3'}}</td>
+                                    <td>{{loteItem.lineaHembra.bbs | number:'1.1-3'}}</td>
+                                    <td>{{loteItem.lineaMacho.hi | number:'1.1-3'}}</td>
+                                    <td>{{loteItem.lineaMacho.bbs | number:'1.1-3'}}</td>
+                                </ng-template>
+                                <td class="2">{{dataReporteItem.totalLineaHembra.sumaTotalHuevosIncubablesHembra |
+                                    number:'3.1-3'}}</td>
+                                <td class="2">{{dataReporteItem.totalLineaHembra.totalHiHembraReal |
+                                    number:'3.1-2'}}</td>
+                                <td class="2">{{dataReporteItem.totalLineaHembra.sumaTotalBbsHembra | number:'3.1-3'}}
+                                </td>
+                                <td class="2">{{dataReporteItem.totalLineaHembra.totalBbsHembraReal | number:'3.1-2'}}
+                                </td>
+                                <td class="2">{{dataReporteItem.totalLineaMacho.sumaTotalHuevosIncubablesMachos |
+                                    number:'3.1-3'}}
+                                </td>
+                                <td class="2">{{dataReporteItem.totalLineaMacho.totalHiMachoReal |
+                                    number:'3.1-2'}}
+                                </td>
+                                <td class="2">{{dataReporteItem.totalLineaMacho.sumaTotalBbsMacho | number:'3.1-3'}}
+                                </td>
+                                <td class="2">{{dataReporteItem.totalLineaMacho.totalBbsMachoReal | number:'3.1-2'}}
+                                </td>
+                                <td class="2">{{dataReporteItem.totalMacho | number:'3.1-3'}}</td>
+                                <td class="2">
+                                    {{dataReporteItem.totalLineaMacho.sumaTotalBbsMacho-dataReporteItem.totalMacho
+                                    |number:'3.1-3'}}
+                                </td>
+
+
+                                <ng-template ngFor let-pedidoItem [ngForOf]="dataReporteItem.pedidos ">
+                                    <td class="text-white" [ngStyle]="{'backgroundColor':pedidoItem.color}">
+                                        {{pedidoItem.pedidoHembra |number:'3.1-3'}}</td>
+                                </ng-template>
+                                <td>
+                                    {{dataReporteItem.totalLineaHembra.sumaTotalBbsHembra-dataReporteItem.sumaTotalPedidoHembra
+                                    | number:'3.1-3'}}
+                                </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

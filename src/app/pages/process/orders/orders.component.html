@@ -1,0 +1,100 @@
+<div class="container-fluid" style="height: 100vh;">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0 font-size-18">Lista de Pedidos</h4>
+                <div class="page-title-right">
+                    <button class="btn btn-success pull-right" (click)="crearNuevoPedido()">Crear</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12">
+            <form [formGroup]="formularioFiltradoPedidos" (ngSubmit)="exportarExcel()">
+                <div class="row">
+                    <div class="col-sm-12 col-md-4">
+                        <div class="mb-3 selected">
+                            <app-clientes-select-form [from]="formularioFiltradoPedidos"
+                                [props]="propsFormularioCliente" [isMultiple]="true">
+                            </app-clientes-select-form>
+                            <div *ngIf="formularioClientesControles.rucClientes.touched && formularioClientesControles.rucClientes.errors"
+                                class="invalid-feedback">
+                                <span *ngIf="formularioClientesControles.rucClientes.errors.required">Requerido</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-2">
+                        <div class="mb-3">
+                            <label class=" col-form-label">Fecha Inicio</label>
+                            <input class="form-control" [ngClass]="{'is-invalid': formularioClientesControles.fechaInicio.touched  && formularioClientesControles.fechaInicio.errors}" type="date" formControlName="fechaInicio" />
+                            <div *ngIf="formularioClientesControles.fechaInicio.touched && formularioClientesControles.fechaInicio.errors"
+                                class="invalid-feedback">
+                                <span *ngIf="formularioClientesControles.fechaInicio.errors.required">Requerido</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-2">
+                        <div class="mb-3">
+                            <label class=" col-form-label">Fecha Fin</label>
+                            <input class="form-control" type="date"
+                                [ngClass]="{'is-invalid': formularioClientesControles.fechaFin.touched  && formularioClientesControles.fechaFin.errors}"
+                                formControlName="fechaFin" />
+                            <div *ngIf="formularioClientesControles.fechaFin.touched && formularioClientesControles.fechaFin.errors"
+                                class="invalid-feedback">
+                                <span *ngIf="formularioClientesControles.fechaFin.errors.required">Requerido</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-4 d-flex align-items-center">
+                        <button class="btn btn-success">
+                            <i class="mdi mdi-file-excel"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+
+        </div>
+        <div class="col-sm-12 col-lg-4 col-md-6 mt-2 " *ngFor="let pedidoVentaItem of listaPedidoVenta">
+            <div class="card">
+                <div class="card-body">
+                    <div style="width: 10px;height: 10px; border-radius: 50%;"
+                        [ngStyle]="{'backgroundColor':pedidoVentaItem.color}"></div>
+                    <p class="card-text">
+                        <strong>{{pedidoVentaItem.nombreCliente}}</strong>
+                    </p>
+                    <div class="button-items">
+                        <button class="btn btn-success w-100" (click)="editar(pedidoVentaItem)">Editar</button>
+
+                        <!--                         <button class="btn btn-info">Ver</button>
+ -->
+                    </div>
+                    <!--  <app-table-custom-generic [data]="listaFactores" [haders]="headerListaFactor">
+                    </app-table-custom-generic> -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<ng-template #editAndCreateOrder let-modalAccion>
+    <div class="modal-header">
+        <h5 class="modal-title">Orden</h5>
+        <button type="button" class="btn-close" aria-hidden="true"
+            (click)="modalAccion.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body p-4">
+        <app-orders-form [mostrarBotonSubmit]="false" [pedidoVentaEdicion]="pedidoVentaEdicion"></app-orders-form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-danger" (click)="modalAccion.dismiss('Close')">Cancelar</button>
+        <button type="submit" form="formularioPedidoVenta" class="btn btn-success ms-1">
+            <ng-template [ngIf]="estaCargandoPeticion | async">
+                <i class="bx bx-loader bx-spin font-size-16 align-middle me-2"></i>
+            </ng-template>
+            {{this.pedidoVentaEdicion ?'Editar':'Crear'}}
+        </button>
+    </div>
+</ng-template>

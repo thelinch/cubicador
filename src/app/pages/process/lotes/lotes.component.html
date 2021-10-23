@@ -1,0 +1,524 @@
+<div class="container-fluid">
+
+    <!-- start page title -->
+    <!--     <app-page-title title="Invoice List" [breadcrumbItems]="breadCrumbItems"></app-page-title>
+ -->
+    <!-- end page title -->
+    <div class="row">
+        <div class="col-sm-12 ">
+            <div class="d-flex justify-content-between">
+                <h4 class="m-0 title-uppercase d-inline-block">Ingreso de Lotes</h4>
+                <button class="btn btn-success pull-right" (click)="nuevoIngresoLotes()">Crear</button>
+            </div>
+
+        </div>
+        <ngx-skeleton-loader count="9" *ngIf="this.cargaListaLotes" appearance="circle" animation="progress-dark"
+            [theme]="{
+            'width':'32%',
+            'height.px': 200,
+            'border-radius': '10px'
+          }"></ngx-skeleton-loader>
+        <ng-template [ngIf]="!this.cargaListaLotes">
+
+            <div class="col-sm-12 col-lg-4 col-md-6 mt-2 " *ngFor="let ingresoLoteItem of listaDeLotes">
+                <div class="card">
+                    <div class="card-header bg-success text-white d-flex justify-content-between">
+                        <div class="numero_ingreso text-white"> {{ingresoLoteItem.numeroIngreso}}</div>
+                        <p class="badge bg-danger m-0 d-flex align-items-center">{{ingresoLoteItem.estadoNombre}}</p>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <strong>NOMBRE INGRESO :</strong><span>{{ingresoLoteItem.nombreIngreso}}</span><br>
+                            <strong>FECHA INGRESO :</strong><span>{{ingresoLoteItem.fecIngresoLevante}}</span><br>
+                            <strong>POBLACION HEMBRA : </strong><span>{{ingresoLoteItem.poblacionLh}}</span><br>
+                            <strong>POBLACION MACHO : </strong><span>{{ingresoLoteItem.poblacionLm}}</span><br>
+                            <strong>SEMANAS LEVANTE : </strong><span>{{ingresoLoteItem.semanasLevante}}</span><br>
+                            <strong>SEMANAS PRODUCCION : </strong><span>{{ingresoLoteItem.semanasProduccion}}</span><br>
+
+
+                        </p>
+                        <div class="button-items">
+                            <button appEstados [estados]="['abierto','proyectado']"
+                                [estadoActual]="ingresoLoteItem.estadoNombre" (click)="editarLote(ingresoLoteItem)"
+                                class="btn btn-success">Editar</button>
+                            <button appEstados [estados]="['abierto','proyectado']"
+                                [estadoActual]="ingresoLoteItem.estadoNombre"
+                                (click)="cerrarProyIngresoLote(ingresoLoteItem.idProyIngresoLote)"
+                                class="btn btn-primary">Cerrar</button>
+                            <button class="btn btn-primary" (click)="proyectar(ingresoLoteItem)" appEstados [estados]="['abierto','proyectado']" [estadoActual]="ingresoLoteItem.estadoNombre">
+                                <ng-template
+                                    [ngIf]="ingresoLoteItem==ingresoLoteSeleccionado && mostrarCargaProyeccion">
+                                    <i class="bx bx-loader bx-spin font-size-16 align-middle me-2"></i>
+                                </ng-template>
+                                <span
+                                    *ngIf="!(ingresoLoteItem==ingresoLoteSeleccionado && mostrarCargaProyeccion)">Proyectar</span>
+                            </button>
+                            <button class="btn btn-secondary"
+                                (click)="openModalFormularioEdicionFactorProduccion(ingresoLoteItem)" appEstados
+                                [estados]="['proyectado']"
+                                [estadoActual]="ingresoLoteItem.estadoNombre">Ed.Produccion</button>
+                            <button class="btn btn-primary" appEstados [estados]="['proyectado','cerrado']"
+                                [estadoActual]="ingresoLoteItem.estadoNombre"
+                                (click)="listarProyeccionDetalle(ingresoLoteItem)">Ver</button>
+                            <button class="btn btn-primary" (click)="generarComparativo(ingresoLoteItem)" appEstados
+                                [estados]="['proyectado','cerrado']" [estadoActual]="ingresoLoteItem.estadoNombre">
+                                <ng-template [ngIf]="ingresoLoteItem==ingresoLoteSeleccionado && this.cargaComparativo">
+                                    <i class="bx bx-loader bx-spin font-size-16 align-middle me-2"></i>
+                                </ng-template>
+                                <ng-template
+                                    [ngIf]="!(ingresoLoteItem==ingresoLoteSeleccionado && this.cargaComparativo)">
+                                    <i class="bx bx-bar-chart-alt"></i>
+                                    <span>Comparativo</span>
+                                </ng-template>
+                            </button>
+                        </div>
+                        <!--  <app-table-custom-generic [data]="listaFactores" [haders]="headerListaFactor">
+                    </app-table-custom-generic> -->
+
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+    </div>
+
+    <!-- end row -->
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<ng-template #editAndCreateIngresoLote let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">Nombre Ingreso :{{ this.ultimoIngresoLote?.nombreIngreso}}</h5>
+        <button type="button" class="btn-close" aria-hidden="true" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body p-4">
+        <form [formGroup]="formularioIngresoLotes" id="formFactorMortalidad"
+            (ngSubmit)="crearyEditaIngresoLotes(formularioIngresoLotes.value)">
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Fecha Ingreso</label>
+                        <input
+                            [ngClass]="{'is-invalid': formularioIngresoLotesControles.fechaIngreso.touched && formularioIngresoLotesControles.fechaIngreso.errors}"
+                            class="form-control" type="date" formControlName="fechaIngreso">
+                        <div *ngIf="formularioIngresoLotesControles.fechaIngreso.touched && formularioIngresoLotesControles.fechaIngreso.errors"
+                            class="invalid-feedback">
+                            <span *ngIf="formularioIngresoLotesControles.fechaIngreso.errors.required">Requerido</span>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Poblacion Inicial Hembra</label>
+                        <input
+                            [ngClass]="{'is-invalid': formularioIngresoLotesControles.poblacionLh.touched && formularioIngresoLotesControles.poblacionLh.errors}"
+                            class="form-control" placeholder="numero inicial linea Hembra" type="number"
+                            formControlName="poblacionLh">
+                        <div *ngIf="formularioIngresoLotesControles.poblacionLh.touched && formularioIngresoLotesControles.poblacionLh.errors"
+                            class="invalid-feedback">
+                            <span *ngIf="formularioIngresoLotesControles.poblacionLh.errors.required">Requerido</span>
+                            <span *ngIf="formularioIngresoLotesControles.poblacionLh.errors.min">El valor minimo es
+                                1</span>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Poblacion Inicial Machos</label>
+                        <input
+                            [ngClass]="{'is-invalid': formularioIngresoLotesControles.poblacionLm.touched && formularioIngresoLotesControles.poblacionLm.errors}"
+                            class="form-control" type="number" placeholder="Porcentaje" type="number"
+                            formControlName="poblacionLm">
+                        <div *ngIf="formularioIngresoLotesControles.poblacionLm.touched && formularioIngresoLotesControles.poblacionLm.errors"
+                            class="invalid-feedback">
+                            <span *ngIf="formularioIngresoLotesControles.poblacionLm.errors.required">Requerido</span>
+
+                            <span *ngIf="formularioIngresoLotesControles.poblacionLm.errors.min">El valor minimo es
+                                1</span>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Semanas Levante</label>
+                        <input
+                            [ngClass]="{'is-invalid': formularioIngresoLotesControles.semanasLevante.touched && formularioIngresoLotesControles.semanasLevante.errors}"
+                            class="form-control" placeholder="Porcentaje" type="number"
+                            formControlName="semanasLevante">
+                        <div *ngIf="formularioIngresoLotesControles.semanasLevante.touched && formularioIngresoLotesControles.semanasLevante.errors"
+                            class="invalid-feedback">
+                            <span
+                                *ngIf="formularioIngresoLotesControles.semanasLevante.errors.required">Requerido</span>
+                            <span *ngIf="formularioIngresoLotesControles.semanasLevante.errors.min">El valor minimo es
+                                1</span>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Semanas de Produccion</label>
+                        <input
+                            [ngClass]="{'is-invalid': formularioIngresoLotesControles.semanasProduccion.touched && formularioIngresoLotesControles.semanasProduccion.errors}"
+                            class="form-control" placeholder="Porcentaje" type="number"
+                            formControlName="semanasProduccion">
+                        <div *ngIf="formularioIngresoLotesControles.semanasProduccion.touched && formularioIngresoLotesControles.semanasProduccion.errors"
+                            class="invalid-feedback">
+                            <span
+                                *ngIf="formularioIngresoLotesControles.semanasProduccion.errors.required">Requerido</span>
+                            <span *ngIf="formularioIngresoLotesControles.semanasProduccion.errors.min">El valor minimo
+                                es 1</span>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="modal.dismiss('Close')">Close</button>
+        <button type="submit" form="formFactorMortalidad" class="btn btn-success ms-1">
+            <ng-template [ngIf]="isLoadingForms | async">
+                <i class="bx bx-loader bx-spin font-size-16 align-middle me-2"></i>
+            </ng-template>
+            {{formularioIngresoLotes.get('idProyIngresoLote').value==null? 'Guardar':'Editar'}}
+        </button>
+    </div>
+</ng-template>
+
+
+
+
+
+<ng-template #editFactorProduccion let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">Ingreso de lotes</h5>
+        <button type="button" class="btn-close" aria-hidden="true" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body p-4">
+        <form [formGroup]="formularioEdicionFactorProduccion" id="formEdicionFactorProduccion"
+            (ngSubmit)="editarLoteDetalle(formularioEdicionFactorProduccion.value)">
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Genero</label>
+                        <select
+                            [ngClass]="{'is-invalid': formularioEdicionFactorProduccionControles.genero.touched && formularioEdicionFactorProduccionControles.genero.errors}"
+                            class="form-control" formControlName="genero">
+                            <option value="LH">LH</option>
+                            <option value="LM">LM</option>
+                        </select>
+                        <div *ngIf="formularioEdicionFactorProduccionControles.genero.touched && formularioEdicionFactorProduccionControles.genero.errors"
+                            class="invalid-feedback">
+                            <span
+                                *ngIf="formularioEdicionFactorProduccionControles.genero.errors.required">Requerido</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Semana</label>
+                        <select
+                            [ngClass]="{'is-invalid': formularioEdicionFactorProduccionControles.semana.touched && formularioEdicionFactorProduccionControles.semana.errors}"
+                            class="form-control" formControlName="semana">
+                            <option *ngFor="let proyDetalleRow of listaProyLoteFila" [ngValue]="proyDetalleRow">
+                                {{proyDetalleRow.semana}}</option>
+                        </select>
+                        <div *ngIf="formularioEdicionFactorProduccionControles.semana.touched && formularioEdicionFactorProduccionControles.semana.errors"
+                            class="invalid-feedback">
+                            <span
+                                *ngIf="formularioEdicionFactorProduccionControles.semana.errors.required">Requerido</span>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Porcentaje Postura</label>
+                        <input
+                            [ngClass]="{'is-invalid': formularioEdicionFactorProduccionControles.porcentajePostura.touched && formularioEdicionFactorProduccionControles.porcentajePostura.errors}"
+                            class="form-control" type="number" placeholder="Porcentaje" type="number"
+                            formControlName="porcentajePostura">
+                        <div *ngIf="formularioEdicionFactorProduccionControles.porcentajePostura.touched && formularioEdicionFactorProduccionControles.porcentajePostura.errors"
+                            class="invalid-feedback">
+                            <span
+                                *ngIf="formularioEdicionFactorProduccionControles.porcentajePostura.errors.required">Requerido</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Porcentaje Huevos Incubables</label>
+                        <input
+                            [ngClass]="{'is-invalid': formularioEdicionFactorProduccionControles.porcentajeHi.touched && formularioEdicionFactorProduccionControles.porcentajeHi.errors}"
+                            class="form-control" placeholder="Porcentaje" type="number" formControlName="porcentajeHi">
+                        <div *ngIf="formularioEdicionFactorProduccionControles.porcentajeHi.touched && formularioEdicionFactorProduccionControles.porcentajeHi.errors"
+                            class="invalid-feedback">
+                            <span
+                                *ngIf="formularioEdicionFactorProduccionControles.porcentajeHi.errors.required">Requerido</span>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="control-label">Porcentaje de Nacimiento</label>
+                        <input
+                            [ngClass]="{'is-invalid': formularioEdicionFactorProduccionControles.porcentajeNacimiento.touched && formularioEdicionFactorProduccionControles.porcentajeNacimiento.errors}"
+                            class="form-control" placeholder="Porcentaje" type="number"
+                            formControlName="porcentajeNacimiento">
+                        <div *ngIf="formularioEdicionFactorProduccionControles.porcentajeNacimiento.touched && formularioEdicionFactorProduccionControles.porcentajeNacimiento.errors"
+                            class="invalid-feedback">
+                            <span
+                                *ngIf="formularioEdicionFactorProduccionControles.porcentajeNacimiento.errors.required">Requerido</span>
+                            <span *ngIf="formularioEdicionFactorProduccionControles.porcentajeNacimiento.errors.min">El
+                                valor minimo
+                                es 1</span>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="modal.dismiss('Close')">Close</button>
+        <button type="submit" form="formEdicionFactorProduccion" class="btn btn-success ms-1">
+            <ng-template [ngIf]="(isLoading | async) && mostrarCargaEdicionLoteDetalle">
+                <i class="bx bx-loader bx-spin font-size-16 align-middle me-2"></i>
+            </ng-template>
+            Editar
+        </button>
+    </div>
+</ng-template>
+
+
+<ng-template #listaProyLoteDetalleConDatosReales let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">Proyeccion-{{ingresoLoteSeleccionado?.nombreIngreso}}
+
+        </h5>
+        <button type="button" class="btn-close" aria-hidden="true" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body p-4 d-flex flex-wrap justify-content-end">
+        <button class="btn btn-success" (click)="exportarExcelLoteDetalleReales()">
+            <ng-template [ngIf]="cargaExportacionExcelDetalle">
+                <i class="bx bx-loader bx-spin font-size-16 align-middle me-2"></i>
+            </ng-template>
+            <i *ngIf="!cargaExportacionExcelDetalle" class="mdi mdi-file-excel"></i>
+        </button>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="fondo-gris">Tipo</th>
+
+                        <th rowspan="2" class="fondo-gris">Fecha</th>
+                        <th rowspan="2" class="fondo-gris">SEM</th>
+                        <th colspan="12" class="text-center fondo-gris">LINEA HEMBRA</th>
+                        <th colspan="12" class="text-center fondo-gris">LINEA MACHO</th>
+
+                    </tr>
+
+                    <tr>
+                        <th class="fondo-gris">#AVES</th>
+                        <th class="fondo-gris-oscuro">#AVES REAL</th>
+
+                        <th class="fondo-gris">#HI</th>
+                        <th class="fondo-gris-oscuro">#HI REAL</th>
+                        <th class="fondo-gris">#P.BBS</th>
+                        <th class="fondo-gris-oscuro">#P.BBS REAL</th>
+                        <th class="fondo-gris">%POSTURA</th>
+                        <th class="fondo-gris-oscuro">%POSTURA REAL</th>
+                        <th class="fondo-gris">%H.I.</th>
+                        <th class="fondo-gris-oscuro">%H.I. REAL</th>
+                        <th class="fondo-gris">%NAC</th>
+                        <th class="fondo-gris-oscuro">%NAC REAL</th>
+                        <th class="fondo-gris">#AVES</th>
+                        <th class="fondo-gris-oscuro">#AVES REAL</th>
+                        <th class="fondo-gris">#HI</th>
+                        <th class="fondo-gris-oscuro">#HI REAL</th>
+                        <th class="fondo-gris">#P.BBS</th>
+                        <th class="fondo-gris-oscuro">#P.BBS REAL</th>
+                        <th class="fondo-gris">%POSTURA</th>
+                        <th class="fondo-gris-oscuro">%POSTURA REAL</th>
+                        <th class="fondo-gris">%H.I.</th>
+                        <th class="fondo-gris-oscuro">%H.I. REAL</th>
+                        <th class="fondo-gris">%NAC</th>
+                        <th class="fondo-gris-oscuro">%NAC REAL</th>
+
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let proyDetalleItem of listaLoteDetallePorIngresoLote">
+                        <td>{{proyDetalleItem.tipo}}</td>
+                        <td>{{proyDetalleItem.fechaMovimiento}}</td>
+                        <td>{{proyDetalleItem.semana}}</td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.saldoAves | number:'1.0-0' }}</td>
+                        <td class="fondo-rosado oscuro">{{proyDetalleItem.lineaHembra.saldoAvesReal | number:'1.0-0' }}
+                        </td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.saldoHi | number:'1.0-0'}}</td>
+                        <td class="fondo-rosado oscuro">{{proyDetalleItem.lineaHembra.saldoHiReal | number:'1.0-0'}}
+                        </td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.saldoBbs | number:'1.0-0'}}</td>
+                        <td class="fondo-rosado oscuro">{{proyDetalleItem.lineaHembra.saldoBbsReal | number:'1.0-0'}}
+                        </td>
+
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.porcentajePostura | number:'1.0-0'}}</td>
+                        <td class="fondo-rosado oscuro">{{proyDetalleItem.lineaHembra.porcentajePosturaReal |
+                            number:'1.0-0'}}
+                        </td>
+
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.porcentajeHi | number:'1.0-0'}}</td>
+                        <td class="fondo-rosado oscuro">{{proyDetalleItem.lineaHembra.porcentajeHiReal |
+                            number:'1.0-0'}}</td>
+
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.porcentajeNacimiento | number:'1.0-0'}}
+                        </td>
+
+                        <td class="fondo-rosado oscuro">{{proyDetalleItem.lineaHembra.porcentajeNacimientoReal |
+                            number:'1.0-0'}}
+                        </td>
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.saldoAves | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste oscuro">{{proyDetalleItem.lineaMacho.saldoAvesReal | number:'1.0-0'}}
+                        </td>
+
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.saldoHi | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste oscuro">{{proyDetalleItem.lineaMacho.saldoHiReal | number:'1.0-0'}}
+                        </td>
+
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.saldoBbs | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste oscuro">{{proyDetalleItem.lineaMacho.saldoBbsReal | number:'1.0-0'}}
+                        </td>
+
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.porcentajePostura | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste oscuro">{{proyDetalleItem.lineaMacho.porcentajePosturaReal |
+                            number:'1.0-0'}}
+                        </td>
+
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.porcentajeHi | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste oscuro">{{proyDetalleItem.lineaMacho.porcentajeHiReal |
+                            number:'1.0-0'}}</td>
+
+                        <td class="fondo-celeste ">{{proyDetalleItem.lineaMacho.porcentajeNacimiento | number:'1.0-0'}}
+                        </td>
+                        <td class="fondo-celeste oscuro">{{proyDetalleItem.lineaMacho.porcentajeNacimientoReal |
+                            number:'1.0-0'}}
+                        </td>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="modal.dismiss('Close')">Close</button>
+    </div>
+</ng-template>
+<ng-template #listaProyLoteDetalle let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">Proyeccion-{{ingresoLoteSeleccionado?.nombreIngreso}}
+
+        </h5>
+        <button type="button" class="btn-close" aria-hidden="true" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body p-4 d-flex flex-wrap justify-content-end">
+        <button class="btn btn-success" (click)="exportarExcelLoteDetalle()">
+            <ng-template [ngIf]="cargaExportacionExcelDetalle">
+                <i class="bx bx-loader bx-spin font-size-16 align-middle me-2"></i>
+            </ng-template>
+            <i *ngIf="!cargaExportacionExcelDetalle" class="mdi mdi-file-excel"></i>
+        </button>
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="fondo-gris">Tipo</th>
+
+                        <th rowspan="2" class="fondo-gris">Fecha</th>
+                        <th rowspan="2" class="fondo-gris">SEM</th>
+                        <th colspan="6" class="text-center fondo-gris">LINEA HEMBRA</th>
+                        <th colspan="6" class="text-center fondo-gris">LINEA MACHO</th>
+
+                    </tr>
+
+                    <tr>
+                        <th class="fondo-gris">#AVES</th>
+                        <th class="fondo-gris">#HI</th>
+                        <th class="fondo-gris">#P.BBS</th>
+                        <th class="fondo-gris">%POSTURA</th>
+                        <th class="fondo-gris">%H.I.</th>
+                        <th class="fondo-gris">%NAC</th>
+                        <th class="fondo-gris">#AVES</th>
+                        <th class="fondo-gris">#HI</th>
+                        <th class="fondo-gris">#P.BBS</th>
+                        <th class="fondo-gris">%POSTURA</th>
+                        <th class="fondo-gris">%H.I.</th>
+                        <th class="fondo-gris">%NAC</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let proyDetalleItem of listaLoteDetallePorIngresoLote">
+                        <td>{{proyDetalleItem.tipo}}</td>
+                        <td>{{proyDetalleItem.fechaMovimiento}}</td>
+                        <td>{{proyDetalleItem.semana}}</td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.saldoAves | number:'1.0-0' }}</td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.saldoHi | number:'1.0-0'}}</td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.saldoBbs | number:'1.0-0'}}</td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.porcentajePostura | number:'1.0-0'}}</td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.porcentajeHi | number:'1.0-0'}}</td>
+                        <td class="fondo-rosado">{{proyDetalleItem.lineaHembra.porcentajeNacimiento | number:'1.0-0'}}
+                        </td>
+
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.saldoAves | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.saldoHi | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.saldoBbs | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.porcentajePostura | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.porcentajeHi | number:'1.0-0'}}</td>
+                        <td class="fondo-celeste">{{proyDetalleItem.lineaMacho.porcentajeNacimiento | number:'1.0-0'}}
+                        </td>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="modal.dismiss('Close')">Close</button>
+    </div>
+</ng-template>
